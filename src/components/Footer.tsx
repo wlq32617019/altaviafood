@@ -7,10 +7,11 @@ export default function Footer() {
           {/* Brand */}
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-lg bg-amber flex items-center justify-center font-bold text-navy text-lg">
-                A
-              </div>
-              <span className="text-xl font-semibold tracking-wide">ALTAVIA</span>
+              <img
+                src="/altavia-logo.jpg"
+                alt="Altavia Limited Logo"
+                className="h-12 w-auto object-contain"
+              />
             </div>
             <p className="text-white/50 text-sm leading-relaxed max-w-sm mb-6">
               A Hong Kong-based international food trading company, connecting premium

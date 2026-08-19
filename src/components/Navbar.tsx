@@ -29,15 +29,14 @@ export default function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
+        <div className="flex items-center justify-between h-24">
           {/* Logo */}
           <a href="#" className="flex items-center gap-3 group">
-            <div className="w-10 h-10 rounded-lg bg-amber flex items-center justify-center font-bold text-navy text-lg tracking-tight">
-              A
-            </div>
-            <span className="text-white text-xl font-semibold tracking-wide">
-              ALTAVIA
-            </span>
+            <img
+              src="/altavia-logo.jpg"
+              alt="Altavia Limited Logo"
+              className="h-14 w-auto object-contain drop-shadow-sm group-hover:opacity-90 transition-opacity"
+            />
           </a>
 
           {/* Desktop Nav */}
