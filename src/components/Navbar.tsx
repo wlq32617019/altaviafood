@@ -33,7 +33,7 @@ export default function Navbar() {
           {/* Logo */}
           <a href="#" className="flex items-center gap-3 group">
             <img
-              src="/altavia-logo.jpg"
+              src="/altavia-logo.png"
               alt="Altavia Limited Logo"
               className="h-14 w-auto object-contain drop-shadow-sm group-hover:opacity-90 transition-opacity"
             />

@@ -8,7 +8,7 @@ export default function Footer() {
           <div className="md:col-span-2">
             <div className="flex items-center gap-3 mb-4">
               <img
-                src="/altavia-logo.jpg"
+                src="/altavia-logo.png"
                 alt="Altavia Limited Logo"
                 className="h-12 w-auto object-contain"
               />
