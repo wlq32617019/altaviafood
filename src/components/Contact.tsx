@@ -50,10 +50,10 @@ export default function Contact() {
                 <div>
                   <h4 className="font-semibold text-navy mb-1">Email</h4>
                   <a
-                    href="mailto:sales@altaviafood.com"
+                    href="mailto:Sales@altaviafood.com"
                     className="text-gray-600 text-sm hover:text-amber transition-colors"
                   >
-                    sales@altaviafood.com
+                    Sales@altaviafood.com
                   </a>
                 </div>
               </div>
