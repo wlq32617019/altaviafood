@@ -49,7 +49,12 @@ export default function Contact() {
                 </div>
                 <div>
                   <h4 className="font-semibold text-navy mb-1">Email</h4>
-                  <p className="text-gray-600 text-sm">info@altavia.com</p>
+                  <a
+                    href="mailto:sales@altaviafood.com"
+                    className="text-gray-600 text-sm hover:text-amber transition-colors"
+                  >
+                    sales@altaviafood.com
+                  </a>
                 </div>
               </div>
             </div>
