@@ -1,26 +1,37 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 const WEB3FORMS_ACCESS_KEY = 'f1dce5cc-4629-4378-8180-377e89d057ad';
 const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
 
+/* ------------------------------------------------------------------ */
+/*  Module-level atomic submission lock (works across Strict Mode     */
+/*  double-mount: there is only ONE of these per page process, so     */
+/*  even if React mounts/unmounts Contact twice we never submit twice).*/
+/* ------------------------------------------------------------------ */
+let SUBMIT_LOCK = false;
+
 export default function Contact() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const inflightRef = useRef<AbortController | null>(null);
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    event.stopPropagation();
 
-    if (inflightRef.current) {
-      return;
-    }
-
-    const controller = new AbortController();
-    inflightRef.current = controller;
+    if (SUBMIT_LOCK) return;
+    SUBMIT_LOCK = true;
     setIsSubmitting(true);
+
+    const submitBtn = (event.currentTarget.querySelector(
+      'button[type="submit"]'
+    ) as HTMLButtonElement | null);
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.setAttribute('aria-busy', 'true');
+    }
 
     try {
       const formData = new FormData(event.currentTarget);
@@ -31,12 +42,12 @@ export default function Contact() {
       const response = await fetch(WEB3FORMS_ENDPOINT, {
         method: 'POST',
         body: formData,
-        signal: controller.signal,
+        keepalive: true,
       });
 
       const data = await response.json();
 
-      if (data.success) {
+      if (data?.success) {
         toast({
           variant: 'success',
           title: 'Inquiry Sent Successfully',
@@ -56,6 +67,10 @@ export default function Contact() {
         });
       }
     } catch (err) {
+      if (typeof window !== 'undefined') {
+        // eslint-disable-next-line no-console
+        console.warn('[ContactForm] submit error:', err);
+      }
       if ((err as { name?: string })?.name === 'AbortError') {
         return;
       }
@@ -67,10 +82,16 @@ export default function Contact() {
         duration: 7000,
       });
     } finally {
-      if (inflightRef.current === controller) {
-        inflightRef.current = null;
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.removeAttribute('aria-busy');
       }
       setIsSubmitting(false);
+      // Allow next submit shortly after the UI settles (guard against
+      // Strict Mode or accidental double-click re-submits)
+      window.setTimeout(() => {
+        SUBMIT_LOCK = false;
+      }, 400);
     }
   };
 
