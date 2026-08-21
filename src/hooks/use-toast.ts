@@ -12,15 +12,20 @@ interface Toast {
   duration?: number;
 }
 
-interface ToastState {
+const TOAST_LIMIT = 3;
+const DEFAULT_DURATION = 5000;
+
+interface MemoryState {
   toasts: Toast[];
 }
 
-const TOAST_LIMIT = 3;
-const TOAST_REMOVE_DELAY = 5000;
+/* ------------------------------------------------------------------ */
+/*  Imperative global store (strict-mode safe: each subscribe is      */
+/*  registered once per effect call, deduped by Set identity)         */
+/* ------------------------------------------------------------------ */
 
-let listeners: Array<(state: ToastState) => void> = [];
-let memoryState: ToastState = { toasts: [] };
+let state: MemoryState = { toasts: [] };
+const listeners = new Set<(s: MemoryState) => void>();
 let count = 0;
 
 function genId() {
@@ -28,58 +33,72 @@ function genId() {
   return count.toString();
 }
 
-function dispatch(state: ToastState) {
-  memoryState = state;
-  listeners.forEach((listener) => listener(state));
+function setState(next: MemoryState) {
+  state = next;
+  listeners.forEach((l) => l(state));
 }
 
-function toast({
+const removeToastById = (id: string) =>
+  setState({ toasts: state.toasts.filter((t) => t.id !== id) });
+
+export function toast({
   title,
   description,
   variant = 'default',
-  duration = TOAST_REMOVE_DELAY,
+  duration = DEFAULT_DURATION,
 }: Omit<Toast, 'id'>) {
   const id = genId();
+  const nextToast: Toast = { id, title, description, variant, duration };
 
-  dispatch({
-    toasts: [
-      { id, title, description, variant, duration },
-      ...memoryState.toasts,
-    ].slice(0, TOAST_LIMIT),
+  setState({
+    toasts: [nextToast, ...state.toasts].slice(0, TOAST_LIMIT),
   });
 
   if (duration > 0) {
-    setTimeout(() => {
-      dispatch({
-        toasts: memoryState.toasts.filter((t) => t.id !== id),
-      });
-    }, duration);
+    window.setTimeout(() => removeToastById(id), duration);
   }
 
   return id;
 }
 
-export function useToast() {
-  const [state, setState] = React.useState<ToastState>(memoryState);
+export function dismiss(id?: string) {
+  if (id === undefined) {
+    setState({ toasts: [] });
+  } else {
+    removeToastById(id);
+  }
+}
 
-  React.useEffect(() => {
-    listeners.push(setState);
-    return () => {
-      listeners = listeners.filter((l) => l !== setState);
-    };
-  }, []);
+/* ------------------------------------------------------------------ */
+/*  React binding: useSyncExternalStore avoids Strict Mode double     */
+/*  subscriber registration bugs (listeners never duplicate).         */
+/* ------------------------------------------------------------------ */
 
-  return {
-    ...state,
-    toast,
-    dismiss: (id?: string) => {
-      dispatch({
-        toasts: id
-          ? memoryState.toasts.filter((t) => t.id !== id)
-          : [],
-      });
-    },
+function subscribe(l: (s: MemoryState) => void) {
+  listeners.add(l);
+  return () => {
+    listeners.delete(l);
   };
 }
 
-export { toast };
+function getSnapshot() {
+  return state;
+}
+
+function getServerSnapshot(): MemoryState {
+  return { toasts: [] };
+}
+
+export function useToast() {
+  const snapshot = React.useSyncExternalStore(
+    subscribe,
+    getSnapshot,
+    getServerSnapshot
+  );
+
+  return {
+    toasts: snapshot.toasts,
+    toast,
+    dismiss,
+  };
+}

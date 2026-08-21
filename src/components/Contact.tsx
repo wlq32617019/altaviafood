@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
 const WEB3FORMS_ACCESS_KEY = 'f1dce5cc-4629-4378-8180-377e89d057ad';
@@ -9,11 +9,17 @@ const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
 export default function Contact() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const inflightRef = useRef<AbortController | null>(null);
 
   const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isSubmitting) return;
 
+    if (inflightRef.current) {
+      return;
+    }
+
+    const controller = new AbortController();
+    inflightRef.current = controller;
     setIsSubmitting(true);
 
     try {
@@ -25,6 +31,7 @@ export default function Contact() {
       const response = await fetch(WEB3FORMS_ENDPOINT, {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
       });
 
       const data = await response.json();
@@ -49,6 +56,9 @@ export default function Contact() {
         });
       }
     } catch (err) {
+      if ((err as { name?: string })?.name === 'AbortError') {
+        return;
+      }
       toast({
         variant: 'destructive',
         title: 'Network Error',
@@ -57,6 +67,9 @@ export default function Contact() {
         duration: 7000,
       });
     } finally {
+      if (inflightRef.current === controller) {
+        inflightRef.current = null;
+      }
       setIsSubmitting(false);
     }
   };
