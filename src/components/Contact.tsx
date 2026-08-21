@@ -1,4 +1,66 @@
+'use client';
+
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+
+const WEB3FORMS_ACCESS_KEY = 'f1dce5cc-4629-4378-8180-377e89d057ad';
+const WEB3FORMS_ENDPOINT = 'https://api.web3forms.com/submit';
+
 export default function Contact() {
+  const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const onSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const formData = new FormData(event.currentTarget);
+      formData.append('access_key', WEB3FORMS_ACCESS_KEY);
+      formData.append('subject', 'New Inquiry from Altavia Website');
+      formData.append('from_name', 'Altavia Website Contact Form');
+
+      const response = await fetch(WEB3FORMS_ENDPOINT, {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        toast({
+          variant: 'success',
+          title: 'Inquiry Sent Successfully',
+          description:
+            'Thank you for reaching out. We will get back to you shortly via email.',
+          duration: 6000,
+        });
+        event.currentTarget.reset();
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Submission Failed',
+          description:
+            data?.message ||
+            'Something went wrong. Please try again or email us directly at Sales@altaviafood.com.',
+          duration: 7000,
+        });
+      }
+    } catch (err) {
+      toast({
+        variant: 'destructive',
+        title: 'Network Error',
+        description:
+          'Please check your connection and try again, or email Sales@altaviafood.com directly.',
+        duration: 7000,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <section id="contact" className="py-24 lg:py-32 bg-white">
       <div className="max-w-7xl mx-auto px-6 lg:px-8">
@@ -63,11 +125,8 @@ export default function Contact() {
           {/* Right - Form */}
           <div className="fade-in-up">
             <form
+              onSubmit={onSubmit}
               className="p-8 rounded-2xl bg-cream border border-gray-100"
-              onSubmit={(e) => {
-                e.preventDefault();
-                alert('Thank you for your inquiry. We will get back to you shortly.');
-              }}
             >
               <div className="space-y-5">
                 <div>
@@ -79,7 +138,8 @@ export default function Contact() {
                     id="name"
                     name="name"
                     required
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-navy placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber transition-all text-sm"
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-navy placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="Your name"
                   />
                 </div>
@@ -92,7 +152,8 @@ export default function Contact() {
                     id="email"
                     name="email"
                     required
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-navy placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber transition-all text-sm"
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-navy placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="your@company.com"
                   />
                 </div>
@@ -104,7 +165,8 @@ export default function Contact() {
                     type="text"
                     id="company"
                     name="company"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-navy placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber transition-all text-sm"
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-navy placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="Your company name"
                   />
                 </div>
@@ -115,14 +177,15 @@ export default function Contact() {
                   <select
                     id="interest"
                     name="interest"
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-navy focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber transition-all text-sm"
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-navy focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber transition-all text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                   >
                     <option value="">Select your interest</option>
-                    <option value="poultry">Poultry Products</option>
-                    <option value="beef">Beef Products</option>
-                    <option value="lamb">Lamb Products</option>
-                    <option value="partnership">Partnership Opportunity</option>
-                    <option value="other">Other</option>
+                    <option value="Poultry Products">Poultry Products</option>
+                    <option value="Beef Products">Beef Products</option>
+                    <option value="Lamb Products">Lamb Products</option>
+                    <option value="Partnership Opportunity">Partnership Opportunity</option>
+                    <option value="Other">Other</option>
                   </select>
                 </div>
                 <div>
@@ -134,15 +197,43 @@ export default function Contact() {
                     name="message"
                     rows={4}
                     required
-                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-navy placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber transition-all text-sm resize-none"
+                    disabled={isSubmitting}
+                    className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-navy placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-amber/50 focus:border-amber transition-all text-sm resize-none disabled:opacity-60 disabled:cursor-not-allowed"
                     placeholder="Tell us about your requirements..."
                   />
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-3.5 bg-navy hover:bg-navy-light text-white font-semibold rounded-lg transition-all duration-300 hover:shadow-lg"
+                  disabled={isSubmitting}
+                  className="w-full py-3.5 bg-navy hover:bg-navy-light text-white font-semibold rounded-lg transition-all duration-300 hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                  Send Inquiry
+                  {isSubmitting ? (
+                    <>
+                      <svg
+                        className="h-4 w-4 animate-spin"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                        />
+                      </svg>
+                      Sending...
+                    </>
+                  ) : (
+                    'Send Inquiry'
+                  )}
                 </button>
               </div>
             </form>
